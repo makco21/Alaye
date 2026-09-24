@@ -61,7 +61,7 @@ Persistence
 │   ├── project-structure.md
 │   ├── notion-schema.md
 │   └── sync-policy.md
-├── .env.example
+├── .env
 └── README.md
 ```
 
@@ -141,7 +141,7 @@ sync_conflicts
 
 ## 7. 実装順序
 
-1. `.env.example`、Notion integration、対象 database ID の設定
+1. `.env`、Notion integration、対象 database ID の設定
 2. Notion adapter と `Records` / `Tasks` の read-only 取得
 3. Today 画面の表示と同期ステータス
 4. タスク・記録の作成と更新
@@ -158,6 +158,7 @@ NOTION_TOKEN=
 NOTION_RECORDS_DATABASE_ID=
 NOTION_TASKS_DATABASE_ID=
 NOTION_PROJECTS_DATABASE_ID=
+NOTION_AREAS_DATABASE_ID=
 CALENDAR_PROVIDER=google
 CALENDAR_CLIENT_ID=
 CALENDAR_CLIENT_SECRET=
