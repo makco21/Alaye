@@ -26,6 +26,14 @@ Notion を中心に、日々の記録とカレンダー管理を一つのワー�
 1. Notion で Internal Integration を作成し、トークンを発行する
 2. 利用する Records / Tasks / Projects データベースを Integration に共有する
 3. `NOTION_TOKEN` を環境変数へ設定する
-4. `python jobs/check_notion_auth.py` を実行する
+4. `python -m jobs.check_notion_auth` を実行する
 
 SDK の依存関係は `pip install -r requirements.txt` で導入できます。認証確認ではトークンを表示せず、接続先 bot の公開情報だけを表示します。
+
+## ディレクトリ
+ディレクトリ	役割
+domain	業務ルール、ドメインモデル
+application	ユースケース、処理の流れ
+integrations	Notion・カレンダー API 連携
+persistence	DB 保存・取得
+shared	設定、ログ、共通エラー

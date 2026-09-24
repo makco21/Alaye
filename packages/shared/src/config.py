@@ -3,6 +3,13 @@
 from dataclasses import dataclass
 import os
 
+from dotenv import load_dotenv
+
+
+load_dotenv()
+if not os.getenv("NOTION_TOKEN"):
+    load_dotenv(".env.example")
+
 
 class ConfigurationError(ValueError):
     """必須設定が不足している場合に送出する。"""
@@ -17,7 +24,7 @@ class Settings:
 
 
 def load_settings() -> Settings:
-    """環境変数を検証して設定を返す。"""
+    """`.env` または環境変数を検証して設定を返す。"""
 
     notion_token = os.getenv("NOTION_TOKEN", "").strip()
     if not notion_token:
