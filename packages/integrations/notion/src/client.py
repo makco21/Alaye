@@ -44,6 +44,25 @@ def query_database(
 
 			if hasattr(notion_client, "databases") and hasattr(notion_client.databases, "query"):
 				response = notion_client.databases.query(database_id=database_id, **query)
+			elif callable(getattr(notion_client, "request", None)):
+				try:
+					response = notion_client.request(
+						path=f"databases/{database_id}/query",
+						method="POST",
+						body=query,
+					)
+				except Exception:
+					if hasattr(notion_client, "databases") and hasattr(
+						notion_client.databases, "retrieve"
+					):
+						database = notion_client.databases.retrieve(database_id=database_id)
+						data_source_id = database.get("data_source_id") or database_id
+					else:
+						data_source_id = database_id
+					response = notion_client.data_sources.query(
+						data_source_id=data_source_id,
+						**query,
+					)
 			else:
 				if hasattr(notion_client, "databases") and hasattr(notion_client.databases, "retrieve"):
 					database = notion_client.databases.retrieve(database_id=database_id)

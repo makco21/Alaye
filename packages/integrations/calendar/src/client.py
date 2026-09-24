@@ -6,6 +6,16 @@ from pathlib import Path
 from typing import Any
 
 
+def build_google_calendar_event_body(event: dict[str, Any]) -> dict[str, Any]:
+	"""Google Calendar API に送る最小限のイベント本文を作成する。"""
+
+	return {
+		key: event[key]
+		for key in ("summary", "description", "start", "end")
+		if key in event and event[key] is not None
+	}
+
+
 def append_google_calendar_events(
 	events: list[dict[str, Any]],
 	credentials_path: str | Path,
@@ -44,11 +54,7 @@ def append_google_calendar_events(
 	service = build("calendar", "v3", credentials=credentials)
 	created_events = []
 	for event in events:
-		body = {
-			key: event[key]
-			for key in ("summary", "description", "location", "visibility", "start", "end")
-			if key in event and event[key] is not None
-		}
+		body = build_google_calendar_event_body(event)
 		created_events.append(
 			service.events().insert(calendarId=calendar_id, body=body).execute()
 		)

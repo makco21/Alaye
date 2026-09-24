@@ -5,19 +5,6 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
-
-EXPIRED_STATUS_VALUES = {
-    "expired",
-    "已过期",
-    "已过期-",
-    "已过期 ",
-    "已过期/",
-    "done",
-    "complete",
-    "completed",
-}
-
-
 def _property_text(property_data: dict[str, Any] | None) -> str | None:
     """Notion property を文字列へ正規化する。"""
 
@@ -34,6 +21,13 @@ def _property_text(property_data: dict[str, Any] | None) -> str | None:
     if property_type in {"title", "rich_text"}:
         values = property_data.get(property_type, [])
         return "".join(item.get("plain_text", "") for item in values) or None
+    if property_type == "formula":
+        formula = property_data.get("formula")
+        if isinstance(formula, dict):
+            formula_type = formula.get("type")
+            formula_value = formula.get(formula_type) if formula_type else None
+            return str(formula_value) if formula_value is not None else None
+        return None
     if property_type in {"select", "status"}:
         selected = property_data.get(property_type)
         if isinstance(selected, dict):
@@ -42,7 +36,8 @@ def _property_text(property_data: dict[str, Any] | None) -> str | None:
     if property_type == "date":
         date_value = property_data.get("date")
         if isinstance(date_value, dict):
-            return date_value.get("start")
+            start_value = date_value.get("start")
+            return start_value.split("T", 1)[0] if start_value else None
         return None
     if property_type == "number":
         number_value = property_data.get("number")
@@ -50,22 +45,12 @@ def _property_text(property_data: dict[str, Any] | None) -> str | None:
     return None
 
 
-def normalize_status(status_value: str | None) -> str:
-    """状態を比較しやすい文字列へ変換する。"""
-
-    if not status_value:
-        return ""
-    cleaned = status_value.strip().lower().replace("_", " ").replace("-", " ")
-    return " ".join(cleaned.split())
-
-
 def is_expired_project(page: dict[str, Any]) -> bool:
     """CL250 のページが期限切れ状態かを判定する。"""
 
     properties = page.get("properties", {})
     status_value = _property_text(properties.get("Status")) or _property_text(properties.get("状态"))
-    normalized = normalize_status(status_value)
-    return normalized in {"expired", "已过期", "已过期  ", "expired "}
+    return status_value == "🔴已到期"
 
 
 def build_google_calendar_event(page: dict[str, Any]) -> dict[str, Any] | None:
@@ -75,9 +60,15 @@ def build_google_calendar_event(page: dict[str, Any]) -> dict[str, Any] | None:
         return None
 
     properties = page.get("properties", {})
-    title = _property_text(properties.get("Title")) or _property_text(properties.get("Name")) or "Untitled"
+    title = (
+        _property_text(properties.get("项目"))
+        or _property_text(properties.get("Title"))
+        or _property_text(properties.get("Name"))
+        or "Untitled"
+    )
     start_text = (
-        _property_text(properties.get("DueDate"))
+        _property_text(properties.get("维护预定日"))
+        or _property_text(properties.get("DueDate"))
         or _property_text(properties.get("Date"))
         or _property_text(properties.get("TargetDate"))
         or _property_text(properties.get("StartDate"))
@@ -88,7 +79,8 @@ def build_google_calendar_event(page: dict[str, Any]) -> dict[str, Any] | None:
     start_date = date.fromisoformat(start_text)
     end_date = start_date + timedelta(days=1)
     description = (
-        _property_text(properties.get("Summary"))
+        _property_text(properties.get("备注"))
+        or _property_text(properties.get("Summary"))
         or _property_text(properties.get("Description"))
         or f"Status: {_property_text(properties.get('Status')) or _property_text(properties.get('状态'))}"
     )

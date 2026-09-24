@@ -7,3 +7,6 @@ venv/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+credentials.json
+token.json
+client_secret_*.json
